@@ -32,13 +32,13 @@ volatile float Motion_Velocity_X = 0, Motion_Velocity_Y = 0, Motion_Velocity_Z =
 volatile float Position_X = 0, Position_Y = 0, Position_Z = 0;
 //update20170314：计算xyz方向加速度的均值滤波
 #define MOVAVG_SIZE  10
-float Acc_buffer_X[MOVAVG_SIZE]={0};
-float Acc_buffer_Y[MOVAVG_SIZE]={0};
-float Acc_buffer_Z[MOVAVG_SIZE]={0};
+// float Acc_buffer_X[MOVAVG_SIZE]={0};
+// float Acc_buffer_Y[MOVAVG_SIZE]={0};
+// float Acc_buffer_Z[MOVAVG_SIZE]={0};
+// uint32_t Acc_index = 0;//accxyz三个buffer共用一个index，每次添加新值都一起添加
 float Motion_Acc_buffer_X[MOVAVG_SIZE]={0};
 float Motion_Acc_buffer_Y[MOVAVG_SIZE]={0};
 float Motion_Acc_buffer_Z[MOVAVG_SIZE]={0};
-uint32_t Acc_index = 0;//accxyz三个buffer共用一个index，每次添加新值都一起添加
 uint32_t Motion_Acc_index = 0;
 float Acc_vector_buffer[MOVAVG_SIZE] = {0}; //update20170314:计算合加速度的均值滤波
 uint32_t Acc_vector_index = 0;
@@ -66,17 +66,17 @@ float invSqrt(float x)
 }
 
 //添加一个新的值到 加速度队列 进行滤波
-void Acc_NewValue(float accx,float accy,float accz)
-{	 
-	Acc_buffer_X[Acc_index] = accx;
-	Acc_buffer_Y[Acc_index] = accy;
-	Acc_buffer_Z[Acc_index] = accz;
-	Acc_index++;
-	if(Acc_index>=MOVAVG_SIZE)
-	{
-		Acc_index -= MOVAVG_SIZE;
-	}
-}
+// void Acc_NewValue(float accx,float accy,float accz)
+// {	 
+// 	Acc_buffer_X[Acc_index] = accx;
+// 	Acc_buffer_Y[Acc_index] = accy;
+// 	Acc_buffer_Z[Acc_index] = accz;
+// 	Acc_index++;
+// 	if(Acc_index>=MOVAVG_SIZE)
+// 	{
+// 		Acc_index -= MOVAVG_SIZE;
+// 	}
+// }
 void Motion_Acc_NewValue(float motion_accx,float motion_accy,float motion_accz)
 {	 
 	Motion_Acc_buffer_X[Motion_Acc_index] = motion_accx;
@@ -602,6 +602,8 @@ void Get_Motion_Acc(void)
 	    Motion_Accy = (sqrt(((pitch_differ + 1) * roll_differ * acc[2]) / temp) / 16384 * 9.8f);
 
 	Motion_Acc_NewValue(Motion_Accx, Motion_Accy, Motion_Accz);
+	Motion_Accx = Acc_GetAvg(Motion_Acc_buffer_X);
+	Motion_Accy = Acc_GetAvg(Motion_Acc_buffer_Y);
 	Motion_Accz = Acc_GetAvg(Motion_Acc_buffer_Z);
 }
 
