@@ -96,7 +96,7 @@ void MS561101BA_NewAlt(float val) {
 		// 	&& (Position_Z * 100.0f + ALT_Update_Interval * Motion_Velocity_Z*100.0f - 5.0f) <= val)
 		// evaluateAltitude = ((Motion_Velocity_dt * Motion_Accz + Motion_Velocity_Z) * Motion_Position_dt + Position_Z) * 100.0f;
 		evaluateAltitude = (Filter_Altitude_D + Filter_Altitude_DD) * ALT_Update_Interval + Filter_Altitude;
-		if ((evaluateAltitude + 10.0f) >= val && (evaluateAltitude - 10.0f) <= val)
+		if ((evaluateAltitude + 5.0f) >= val && (evaluateAltitude - 5.0f) <= val)
 		{
 			val = 0.9f * val + 10.0f * Position_Z;
 			debug_flag++;
@@ -140,7 +140,7 @@ float Altitude_Get_D(void){
 	    D = D +	(ALT_Update_Interval / (ALT_Update_Interval + MS5611_Lowpass)) * (temp - D);
 	    Filter_Altitude_DD = (D - Filter_Altitude_DD);
 	}
-	Filter_Altitude_D = 0.5f * D + 50.0f * Motion_Velocity_Z;
+	Filter_Altitude_D = 0.75f * D + 25.0f * Motion_Velocity_Z;
 	Motion_Velocity_Z = Filter_Altitude_D / 100.0f;
 	return D;
 }
@@ -282,12 +282,10 @@ float MS561101BA_get_altitude(void){
 	{
 	    MS561101BA_NewAlt(MS5611_Altitude);
 	    MS5611_Altitude = MS561101BA_getAvg(Alt_buffer, MOVAVG_SIZE);
+		return (MS5611_Altitude);
 	}
 	else
-	{
-	    MS5611_Altitude = Alt_buffer[MOVAVG_SIZE - 1];
-	}
-	return (MS5611_Altitude);
+	    return Alt_buffer[MOVAVG_SIZE - 1];
 }
 
 /**************************实现函数********************************************
@@ -344,9 +342,10 @@ void MS561101BA_getPressure(void) {
 	
 	temp = MS561101BA_get_altitude(); // 0.01meter
 							  
-	Filter_Altitude = Filter_Altitude +	  //低通滤波   20hz
-	 (ALT_Update_Interval/(ALT_Update_Interval + MS5611_Lowpass))*(temp - Filter_Altitude);
-	
+	// Filter_Altitude = Filter_Altitude +	  //低通滤波   20hz
+	//  (ALT_Update_Interval/(ALT_Update_Interval + MS5611_Lowpass))*(temp - Filter_Altitude);
+	Filter_Altitude = temp;
+
 	Position_Z = Filter_Altitude / 100.0f;
 }
 
