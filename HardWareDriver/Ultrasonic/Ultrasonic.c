@@ -42,51 +42,30 @@ volatile uint32_t Ultra_High_time = 0,
 				   Ultra_Start_time = 0,	
 				   Ultra_Low_time = 0;	
 static float Dist_buffer[MOVAVG_SIZE];
-static uint8_t Dis_index = 0;
 float Ultra_dt = 0.0; //两次测量的时间差作为Ultra_dt 单位us
 float  Ultra_Distance = 0 ;//xiang：全局变量，当前检测到的高度值，单位是米；超声波这一块所有的距离单位都是米;本来是初始化为0，为了方便观察，我设置为0.01
-// int16_t Ultra_health = 0;//update20161227:新增健康度，当健康度到90%时定高只使用超声波数据//update201612271346:不用健康度了，校准气压计功能里已经有Ultra_valid这个健康度了
-//update20161227:不再使用单独的超声波求微分的函数，而是把数据存到气压计的定高buffer里，让气压计求微分
 
 //添加一个新的值到 队列 进行滤波
-void Ultrasonic_NewDis(float val) {
-  if(val > (float)Max_Range)
-  	return;		
-  Dist_buffer[Dis_index] = val;
-  Dis_index = ((Dis_index + 1) % MOVAVG_SIZE);  
+void Ultrasonic_NewDis(float val)
+{
+    static uint8_t Dis_index = 0;
+    if (val > (float)Max_Range)
+		return;
+    Dist_buffer[Dis_index] = val;
+    Dis_index = ((Dis_index + 1) % MOVAVG_SIZE);
 }
 
 //读取队列 的平均值
-float Ultrasonic_getAvg(float * buff, int size) {
-  float sum = 0.0;
-  int i;
-  for(i=0; i<size; i++) {
-    sum += buff[i];
-  }
-  return (sum / (float)size);
+float Ultrasonic_getAvg(float *buff, int size)
+{
+    float sum = 0.0;
+    int i;
+    for (i = 0; i < size; i++)
+    {
+		sum += buff[i];
+    }
+    return (sum / (float)size);
 }
-//update20161227：注释掉整个函数
-// /**************************实现函数********************************************
-// *函数原型:	float Ultrasonic_Get_D(void)
-// *功　　能:  取超声波的距离变化率 变化率单位 米每秒
-// xiang:这个函数是我自己写的
-// *******************************************************************************/
-// float Ultrasonic_Get_D(void){
-// //	float new=0,old=0;
-// //	int16_t i;
-// //	float speed;
-// //	for(i=1;i<=MOVAVG_SIZE/2;i++)//dis_index指向的是空白，dis_index-1指向的是最新的距离值
-// //		new+=Dist_buffer[(Dis_index-i)%MOVAVG_SIZE];
-// //	new /=(MOVAVG_SIZE/2);//新数据=buffer里新的一半的数据的平均和
-
-// //	for(i=MOVAVG_SIZE/2+1;i<=MOVAVG_SIZE;i++)
-// //		old+=Dist_buffer[(Dis_index-i)%MOVAVG_SIZE];
-// //	old/=(MOVAVG_SIZE/2);//旧数据=buffer里旧的一半的数据的平均和
-// //	speed=(new-old)/(MOVAVG_SIZE/2)/(Ultra_dt);//距离/时间
-// //	return speed;//返回变化率
-
-// 	return Ultra_D;
-// }
 
 // 配置中断线  EXTI15_10_IRQn 优先级别 并使能
 void Ultrasonic_NVIC_Config(void){
@@ -133,9 +112,10 @@ void Ultrasonic_initial(void){
 
 	GPIO_ResetBits(GPIOA, GPIO_Pin_12);	//先不要发超声波
 
-	for(i=0;i<MOVAVG_SIZE;i++){
-				Dist_buffer[i]=0; //清队列，准备行动！
-				}
+	for (i = 0; i < MOVAVG_SIZE; i++)
+	{
+	    Dist_buffer[i] = 0; //清队列，准备行动！
+	}
 }
 
 //启动 发送超声波信号。
@@ -208,25 +188,12 @@ void Ultrasonic_Routine(void){
 				Ultra_IsUseful = 1;//update201612271346直接用Ultra_valid作为是否只使用超声波的健康度
 				Ultra_valid = MOVAVG_SIZE;
 			}
-			//update201612271346
-			// //超声波健康度和是否只使用超声波数据定高标识//update20161227
-			// Ultra_health++;
-			// if(Ultra_health>100)
-			//     Ultra_health = 100;
-			// if (Ultra_health > 90)	Ultra_IsUseful = 1;
-			// 	// else	Ultra_IsUseful = 1;//update20161227:把佟源祥代码里这行移到Ultra_ST_Error里，因为如果error的话直接break了，根本执行不到这里
 			Ultra_Stauts = Ultra_ST_Idle;
 			break;
 	case Ultra_ST_Error:
 			Ultra_valid = 0;  //超声波高度有效计数 清零
 			Ultra_IsUseful = 0;
 			Ultra_Stauts = Ultra_ST_Idle; //进入休息状态
-			//update201612271346
-			// //如果数据错误则减健康度//update20161227
-			// // Ultra_health--;
-			// // if(Ultra_health<0)	Ultra_health = 0;
-			// // if (Ultra_health < 90)	Ultra_IsUseful = 0;//update20161227:比佟源祥的代码多添加了这行
-			// Ultra_health = 0;//update20161227:不用Ultra_health--了，直接清零
 
 			break;
 	case Ultra_ST_Idle:		 //休息时间。我们不要采集那么快。
