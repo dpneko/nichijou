@@ -36,6 +36,9 @@ static float Alt_Offset_cm = 0;
 static float avg_Pressure;
 float ALT_Update_Interval = 0.0; //两次高度测量，之间的时间间隔
 
+volatile float evaluateAltitude = 0;
+volatile float Filter_Altitude_DD = 0;
+
 //units (Celsius degrees*100, mbar*100  ).
 //单位 [温度 0.01度] [气压 帕]  [高度0.01米] 
 float MS5611_Temperature,MS5611_Pressure,MS5611_Altitude=0.0f;//经过各种处理后的最终的测量结果，其他地方如果要用的话就直接用这三个。
@@ -77,15 +80,25 @@ void MS561101BA_NewAlt(float val) {
 // update20170110:添加对高度数据是否合理的判断，偏差太大的数据则剔除
     int16_t i;
     static uint32_t alt_lastupdate, temp;
+	temp = micros();
+	//update20161227:增加对定时器溢出的判断
+	if (temp <= alt_lastupdate)
+		ALT_Update_Interval = ((float)(temp + (0xffffffff - alt_lastupdate))) / 1000000.0f;
+	else
+		ALT_Update_Interval = ((float)(temp - alt_lastupdate)) / 1000000.0f;
+	alt_lastupdate = temp;
 	//update20170315判断数据是否合理，数据融合
 	// if( ( (Motion_Accz*ALT_Update_Interval + Motion_Velocity_Z) * ALT_Update_Interval + Filter_Altitude/100.0f + 0.03f) >= (val/100.0f)
 	//  			&& ( (-Motion_Accz*ALT_Update_Interval + Motion_Velocity_Z) * ALT_Update_Interval + Filter_Altitude/100.0f - 0.03f) <= (val/100.0f) )
 	if(Ultra_IsUseful)
 	{
-		if ((Position_Z * 100.0f + ALT_Update_Interval * Motion_Velocity_Z + 3.0f) >= val 
-			&& (Position_Z * 100.0f + ALT_Update_Interval * Motion_Velocity_Z - 3.0f) <= val)
+		// if ((Position_Z * 100.0f + ALT_Update_Interval * Motion_Velocity_Z*100.0f + 5.0f) >= val 
+		// 	&& (Position_Z * 100.0f + ALT_Update_Interval * Motion_Velocity_Z*100.0f - 5.0f) <= val)
+		// evaluateAltitude = ((Motion_Velocity_dt * Motion_Accz + Motion_Velocity_Z) * Motion_Position_dt + Position_Z) * 100.0f;
+		evaluateAltitude = (Filter_Altitude_D + Filter_Altitude_DD) * ALT_Update_Interval + Filter_Altitude;
+		if ((evaluateAltitude + 10.0f) >= val && (evaluateAltitude - 10.0f) <= val)
 		{
-			val = 0.7f * val + 30.0f * Position_Z;
+			val = 0.9f * val + 10.0f * Position_Z;
 			debug_flag++;
 		}
 		else
@@ -101,14 +114,6 @@ void MS561101BA_NewAlt(float val) {
 	for (i = 1; i < MOVAVG_SIZE; i++)
 		Alt_buffer[i - 1] = Alt_buffer[i];
 	Alt_buffer[MOVAVG_SIZE - 1] = val;
-
-	temp = micros();
-	//update20161227:增加对定时器溢出的判断
-	if (temp <= alt_lastupdate)
-		ALT_Update_Interval = ((float)(temp + (0xffffffff - alt_lastupdate))) / 1000000.0f;
-	else
-		ALT_Update_Interval = ((float)(temp - alt_lastupdate)) / 1000000.0f;
-	alt_lastupdate = temp;
 
 	Altitude_Get_D(); //update20170312
 }
@@ -131,7 +136,9 @@ float Altitude_Get_D(void){
 	//update20161230:增加对是否会出现0/0做判断，因为在起始的时候，new和old和ALT_Update_Interval都是0，要等好长一段时间后才有值
 	if (!isnan(temp))//判断temp是不是一个数字
 	{
+	    Filter_Altitude_DD = D;
 	    D = D +	(ALT_Update_Interval / (ALT_Update_Interval + MS5611_Lowpass)) * (temp - D);
+	    Filter_Altitude_DD = (D - Filter_Altitude_DD);
 	}
 	Filter_Altitude_D = 0.5f * D + 50.0f * Motion_Velocity_Z;
 	Motion_Velocity_Z = Filter_Altitude_D / 100.0f;
@@ -271,9 +278,15 @@ float MS561101BA_get_altitude(void){
 	newAltitude = newAltitude + Alt_Offset_cm ;  //加偏置
 	MS5611_Altitude = MS5611_Altitude +	  //低通滤波   20hz
 	 	(ALT_Update_Interval/(ALT_Update_Interval + MS5611_Lowpass))*(newAltitude - MS5611_Altitude);
-	if(Ultra_IsUseful <= 0)
+	if (Ultra_IsUseful <= 0)
+	{
 	    MS561101BA_NewAlt(MS5611_Altitude);
-	MS5611_Altitude = MS561101BA_getAvg(Alt_buffer,MOVAVG_SIZE);
+	    MS5611_Altitude = MS561101BA_getAvg(Alt_buffer, MOVAVG_SIZE);
+	}
+	else
+	{
+	    MS5611_Altitude = Alt_buffer[MOVAVG_SIZE - 1];
+	}
 	return (MS5611_Altitude);
 }
 

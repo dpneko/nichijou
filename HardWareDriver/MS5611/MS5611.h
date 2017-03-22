@@ -41,6 +41,10 @@ extern uint8_t Ultra_IsUseful;//update20161227:新增:是否只使用超声波�
 extern float Filter_Altitude_D;//update20170312
 extern float Filter_Altitude;//update20170315
 extern float debug_flag;
+
+extern volatile float evaluateAltitude;
+extern volatile float Filter_Altitude_DD;
+
 void MS561101BA_init(void);
 void MS5611BA_Routing(void);
 void MS561101BA_ResetAlt(void);
