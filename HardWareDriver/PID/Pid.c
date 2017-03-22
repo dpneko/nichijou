@@ -177,6 +177,13 @@ void pidSetTarget_Measure(struct Quad_PID* pid, float target, float measured)
   pid->merror = pid->target - measured;
 }
 
+void pidSetPID(struct Quad_PID* pid, float kp, float ki, float kd)
+{
+  pid->Kp = kp;
+  pid->Ki = ki;
+  pid->Kd = kd;
+}
+
 void pidSetKp(struct Quad_PID* pid, float kp)
 {
   pid->Kp = kp;

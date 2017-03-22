@@ -39,6 +39,7 @@ void pidSetIntegralLimit(struct Quad_PID* pid, float limit);
 void pidSetError(struct Quad_PID* pid, float err);
 void pidReset(struct Quad_PID* pid);
 void pidSetTarget(struct Quad_PID* pid, float target);
+void pidSetPID(struct Quad_PID *pid, float kp, float ki, float kd);
 void pidSetKp(struct Quad_PID* pid, float kp);
 void pidSetKi(struct Quad_PID* pid, float ki);
 void pidSetKd(struct Quad_PID* pid, float kd);
