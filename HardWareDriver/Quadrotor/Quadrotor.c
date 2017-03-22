@@ -465,62 +465,62 @@ float Height_PID(float height)
     // 	return Increas_Output_Accumulat;
 
 // 使用位置式高度PID串联增量式/位置式速度PID的代码
-	// // 电赛专用330机架适用pid（仅测试了增量式pid，位置式pid理论上一样）：
-	// // 高度
-	// // kp:0.6
-	// // ki:0
-	// // kd:0
-	// // 速度
-	// // kp:0.7
-	// // ki:0.01
-	// // kd:0.1
-	// float ClimbTarget;
-	// float THR_err;
-	// static float alt_err = 0;
-	// static float z_rate_error = 0;
-	// static uint32_t last_call_us = 0;
+	// 电赛专用330机架适用pid（仅测试了增量式pid，位置式pid理论上一样）：
+	// 高度
+	// kp:0.6
+	// ki:0
+	// kd:0
+	// 速度
+	// kp:0.7
+	// ki:0.01
+	// kd:0.1
+	float ClimbTarget;
+	float THR_err;
+	static float alt_err = 0;
+	static float z_rate_error = 0;
+	static uint32_t last_call_us = 0;
 
-	// float Interval_dt = 0;
-	// uint32_t now_time = micros();
-	// if(now_time - last_call_us > 100000 ){ //超过100ms没有调用这个程序了。
-	// 	z_rate_error = 0;
-	// 	alt_err=0;
-	// 	ClimbTarget = 0;
-	// }
+	float Interval_dt = 0;
+	uint32_t now_time = micros();
+	if(now_time - last_call_us > 100000 ){ //超过100ms没有调用这个程序了。
+		z_rate_error = 0;
+		alt_err=0;
+		ClimbTarget = 0;
+	}
 
-	// //如果要位置式PID就用这行
-    // // if(now_time - last_call_us < 20000 )return Climb.PID_out; //控制高度的更新速率为50hz
-	// //如果要增量式PID就用这行
-	// if(now_time - last_call_us < 20000 )return Increas_Output_Accumulat; //控制高度的更新速率为50hz
+	//如果要位置式PID就用这行
+    // if(now_time - last_call_us < 20000 )return Climb.PID_out; //控制高度的更新速率为50hz
+	//如果要增量式PID就用这行
+	if(now_time - last_call_us < 20000 )return Increas_Output_Accumulat; //控制高度的更新速率为50hz
 
-	// Interval_dt = (float)(now_time - last_call_us)/1000000.0f;//s
-	// last_call_us = now_time;
+	Interval_dt = (float)(now_time - last_call_us)/1000000.0f;//s
+	last_call_us = now_time;
 
-	// // pidSetTarget_Measure(&AutoHigh_THR,height*100.0f,GetAltitude());//update20161227
-	// pidSetTarget_Measure(&AutoHigh_THR,height*100.0f,Filter_Altitude);
-	// alt_err = alt_err    //低通滤波。 2Hz
-	// 	+ (Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(AutoHigh_THR.merror , -50.0f , 100.0f) - alt_err);
-	// ClimbTarget = pidUpdate_err(&AutoHigh_THR , //climbtarget单位为cm/s
-	// 							alt_err ,
-	// 							ALT_Update_Interval);	//高度计更新间隔
-	// ClimbTarget = Math_fConstrain(ClimbTarget,-60.0f,+60.0f);
-	// // pidSetTarget_Measure(&Climb,ClimbTarget,GetZSpeed());//update20161227
-	// pidSetTarget_Measure(&Climb,ClimbTarget,Filter_Altitude_D);//update20170312
-	// z_rate_error = z_rate_error + //低通滤波。 2Hz
-	// 	(Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(Climb.merror, -100.0f , 100.0f) - z_rate_error);
+	// pidSetTarget_Measure(&AutoHigh_THR,height*100.0f,GetAltitude());//update20161227
+	pidSetTarget_Measure(&AutoHigh_THR,height*100.0f,Filter_Altitude);
+	alt_err = alt_err    //低通滤波。 2Hz
+		+ (Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(AutoHigh_THR.merror , -50.0f , 100.0f) - alt_err);
+	ClimbTarget = pidUpdate_err(&AutoHigh_THR , //climbtarget单位为cm/s
+								alt_err ,
+								ALT_Update_Interval);	//高度计更新间隔
+	ClimbTarget = Math_fConstrain(ClimbTarget,-60.0f,+60.0f);
+	// pidSetTarget_Measure(&Climb,ClimbTarget,GetZSpeed());//update20161227
+	pidSetTarget_Measure(&Climb,ClimbTarget,Filter_Altitude_D);//update20170312
+	z_rate_error = z_rate_error + //低通滤波。 2Hz
+		(Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(Climb.merror, -100.0f , 100.0f) - z_rate_error);
 
-    // //如果要用位置式pid就用这三行
+    //如果要用位置式pid就用这三行
 	// pidUpdate_err(&Climb ,z_rate_error, ALT_Update_Interval);//速度内环
 	// Climb.PID_out = Math_fConstrain(Climb.PID_out,1300-Default_Throttle,1550-Default_Throttle);
 	// // Height_PID_Out = Height_PID_Out + (Interval_dt / (0.0795775f + Interval_dt)) * Climb.PID_out;
 	// return Climb.PID_out;
 
-    //如果要用增量式pid就用这几行
-	// THR_err = IncreasingPID(&Climb, z_rate_error);
-	// THR_err = Math_fConstrain(THR_err,-0.5f,+0.5f);
-	// Increas_Output_Accumulat+=THR_err;
-	// Increas_Output_Accumulat = Math_fConstrain(Increas_Output_Accumulat,1350-Default_Throttle,1600-Default_Throttle);
-	// return Increas_Output_Accumulat;
+    // 如果要用增量式pid就用这几行
+	THR_err = IncreasingPID(&Climb, z_rate_error);
+	THR_err = Math_fConstrain(THR_err,-0.5f,+0.5f);
+	Increas_Output_Accumulat+=THR_err;
+	Increas_Output_Accumulat = Math_fConstrain(Increas_Output_Accumulat,1350-Default_Throttle,1600-Default_Throttle);
+	return Increas_Output_Accumulat;
 
 //使用pid输出累加
     //	//static float Increas_Output_Accumulat=0;//增量式pid的输出的累加
@@ -558,54 +558,52 @@ float Height_PID(float height)
     //	Increas_Output_Accumulat = Math_fConstrain(Increas_Output_Accumulat,1300-Default_Throttle,1550-Default_Throttle);
     //	return Increas_Output_Accumulat;
 //使用三级串联pid
-	//Z_Speed是高度pid，AutoHigh_THR是速度pid，Climb是加速度pid
-	// float ClimbTarget;
-	// float THR_err;
-	static float alt_err = 0;
-	static float z_rate_error = 0;
-	static float z_accel_error = 0;
-	static uint32_t last_call_us = 0;
+	// //Z_Speed是高度pid，AutoHigh_THR是速度pid，Climb是加速度pid
+	// // float ClimbTarget;
+	// // float THR_err;
+	// static float alt_err = 0;
+	// static float z_rate_error = 0;
+	// static float z_accel_error = 0;
+	// static uint32_t last_call_us = 0;
 
-	float Interval_dt = 0;
-	uint32_t now_time = micros();
-	if(now_time - last_call_us > 100000 ){ //超过100ms没有调用这个程序了。
-		z_rate_error = 0;
-		alt_err=0;
-		// ClimbTarget = 0;
-	}
+	// float Interval_dt = 0;
+	// uint32_t now_time = micros();
+	// if(now_time - last_call_us > 100000 ){ //超过100ms没有调用这个程序了。
+	// 	z_rate_error = 0;
+	// 	alt_err=0;
+	// 	// ClimbTarget = 0;
+	// }
 
-    if(now_time - last_call_us < 20000 )return Climb.PID_out; //控制高度的更新速率为50hz
+    // if(now_time - last_call_us < 20000 )return Climb.PID_out; //控制高度的更新速率为50hz
 
-	Interval_dt = (float)(now_time - last_call_us)/1000000.0f;//s
-	last_call_us = now_time;
+	// Interval_dt = (float)(now_time - last_call_us)/1000000.0f;//s
+	// last_call_us = now_time;
 
-	pidSetKp(&Z_Speed, 0.7);
-	pidSetKi(&Z_Speed, 0.0);
-	pidSetKd(&Z_Speed, 0.0);
-	pidSetTarget_Measure(&Z_Speed,height*100.0f,Filter_Altitude);
-	// if(Z_Speed.merror>3.0f||Z_Speed.merror<-3.0f)
-	{
-		alt_err = alt_err    //低通滤波。 2Hz
-			+ (Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(Z_Speed.merror , -50.0f , 100.0f) - alt_err);
-		pidUpdate_err(&Z_Speed, alt_err, PID_dt);
-	}
-	pidSetTarget_Measure(&AutoHigh_THR,Z_Speed.PID_out,Filter_Altitude_D);//update20170312
-	// if(AutoHigh_THR.merror>5.0f||AutoHigh_THR.merror<-5.0f)
-	{
-		z_rate_error = z_rate_error + //低通滤波。 2Hz
-			(Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(AutoHigh_THR.merror, -100.0f , 100.0f) - z_rate_error);
-		pidUpdate_err(&AutoHigh_THR ,z_rate_error, PID_dt);//速度内环
-	}
-	pidSetTarget_Measure(&Climb,AutoHigh_THR.PID_out,(acc_vector - Config.ACC_z_zero) * 100.0f);
-	// if(Climb.merror>10.0f||Climb.merror<-10.0f)
-	{
-		z_accel_error = z_accel_error + //低通滤波。 2Hz
-			(Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(Climb.merror, -200.0f , 200.0f) - z_accel_error);
-		pidUpdate_err(&Climb ,z_accel_error, PID_dt);//加速度内环
+	// pidSetPID(&Z_Speed, 1.0f, 0.0f, 0.0f);
+	// pidSetTarget_Measure(&Z_Speed,height*100.0f,Filter_Altitude);
+	// // if(Z_Speed.merror>3.0f||Z_Speed.merror<-3.0f)
+	// {
+	// 	alt_err = alt_err    //低通滤波。 2Hz
+	// 		+ (Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(Z_Speed.merror , -50.0f , 100.0f) - alt_err);
+	// 	pidUpdate_err(&Z_Speed, alt_err, PID_dt);
+	// }
+	// pidSetTarget_Measure(&AutoHigh_THR,Z_Speed.PID_out,Filter_Altitude_D);//update20170312
+	// // if(AutoHigh_THR.merror>5.0f||AutoHigh_THR.merror<-5.0f)
+	// {
+	// 	z_rate_error = z_rate_error + //低通滤波。 2Hz
+	// 		(Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(AutoHigh_THR.merror, -100.0f , 100.0f) - z_rate_error);
+	// 	pidUpdate_err(&AutoHigh_THR ,z_rate_error, PID_dt);//速度内环
+	// }
+	// pidSetTarget_Measure(&Climb,AutoHigh_THR.PID_out,(Motion_Accz) * 100.0f);
+	// // if(Climb.merror>10.0f||Climb.merror<-10.0f)
+	// {
+	// 	z_accel_error = z_accel_error + //低通滤波。 2Hz
+	// 		(Interval_dt / (0.0795775f + Interval_dt)) * (Math_fConstrain(Climb.merror, -200.0f , 200.0f) - z_accel_error);
+	// 	pidUpdate_err(&Climb ,z_accel_error, PID_dt);//加速度内环
 
-		Climb.PID_out = Math_fConstrain(Climb.PID_out,1300-Default_Throttle,1550-Default_Throttle);
-	}
-	return Climb.PID_out;
+	// 	Climb.PID_out = Math_fConstrain(Climb.PID_out,1300-Default_Throttle,1550-Default_Throttle);
+	// }
+	// return Climb.PID_out;
 }
 
 //-----------------------------------------------------------------------------
