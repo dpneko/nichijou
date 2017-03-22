@@ -32,7 +32,8 @@ struct Quad_PID{
 void pidInit(struct Quad_PID* pid, const float kp,
              const float ki, const float kd);
 float pidUpdate(struct Quad_PID* pid, float measured,float dt);
-float IncreasingPID(struct Quad_PID *pid, float err, float dt); //xiang:增量式pid，我自己写的
+// float IncreasingPID(struct Quad_PID *pid, float err, float dt); //xiang:增量式pid，我自己写的
+float IncreasingPID(struct Quad_PID *pid, float err); //xiang:增量式pid，我自己写的
 float pidUpdate_err(struct Quad_PID* pid,float err, float dt);
 void pidSetIntegralLimit(struct Quad_PID* pid, float limit);
 void pidSetError(struct Quad_PID* pid, float err);

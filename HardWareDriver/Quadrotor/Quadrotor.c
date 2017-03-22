@@ -373,7 +373,7 @@ float Z_Speed_PID(float Speed)
 	// return Climb.PID_out;
 
 	//如果要用增量式pid就用这三行
-	THR_err = IncreasingPID(&Climb ,z_rate_error,ALT_Update_Interval);
+	THR_err = IncreasingPID(&Climb ,z_rate_error);
 	//THR_err = Math_fConstrain(THR_err,-0.01f,+0.01f);	
 	Increas_Output_Accumulat+=THR_err;
 	Increas_Output_Accumulat = Math_fConstrain(Increas_Output_Accumulat,1300-Default_Throttle,1550-Default_Throttle);
@@ -516,7 +516,7 @@ float Height_PID(float height)
 	// return Climb.PID_out;
 
     //如果要用增量式pid就用这几行
-	// THR_err = IncreasingPID(&Climb, z_rate_error, ALT_Update_Interval);
+	// THR_err = IncreasingPID(&Climb, z_rate_error);
 	// THR_err = Math_fConstrain(THR_err,-0.5f,+0.5f);
 	// Increas_Output_Accumulat+=THR_err;
 	// Increas_Output_Accumulat = Math_fConstrain(Increas_Output_Accumulat,1350-Default_Throttle,1600-Default_Throttle);

@@ -77,14 +77,29 @@ float pidUpdate(struct Quad_PID *pid, float measured, float dt)
   返回：返回的是增量
   xiang：这个函数是我写的
 *******************************************************************************/
-float IncreasingPID(struct Quad_PID* pid,float err,float dt)
+// float IncreasingPID(struct Quad_PID* pid,float err,float dt)
+// {//update20161230:添加dt
+//   float output;
+//   pid->merror = err;
+
+//   pid->outP = pid->Kp * (pid->merror-pid->last_error);
+//   pid->outI = pid->Ki * pid->merror * dt;
+//   pid->outD = pid->Kd * (pid->merror - 2 * (pid->last_error) + pid->pre_error) / dt;
+
+//   pid->PID_out = output = pid->outP + pid->outI + pid->outD;
+  
+//   pid->pre_error=pid->last_error;
+//   pid->last_error=pid->merror;
+//   return output;
+// }
+float IncreasingPID(struct Quad_PID* pid,float err)
 {//update20161230:添加dt
   float output;
   pid->merror = err;
 
   pid->outP = pid->Kp * (pid->merror-pid->last_error);
-  pid->outI = pid->Ki * pid->merror * dt;
-  pid->outD = pid->Kd * (pid->merror - 2 * (pid->last_error) + pid->pre_error) / dt;
+  pid->outI = pid->Ki * pid->merror;
+  pid->outD = pid->Kd * (pid->merror - 2 * (pid->last_error) + pid->pre_error);
 
   pid->PID_out = output = pid->outP + pid->outI + pid->outD;
   
