@@ -198,6 +198,7 @@ void Ultrasonic_Routine(void){
 			Distance *= (float)cos(fabs(IMU_Roll * M_PI / 180));//fabs是取绝对值//update20161227:消除角度影响；这个代码需不需要加有争议，因为cos计算量大，但是收益不高
 			Distance *= (float)cos(fabs(IMU_Pitch * M_PI / 180));
 			//update201612271359增加低通滤波
+			Ultra_Distance = Ultrasonic_getAvg(Dist_buffer,MOVAVG_SIZE);
 			Ultra_Distance = Ultra_Distance + //低通滤波   20hz
 					 (Ultra_dt / (Ultra_dt + Ultra_Lowpass)) * (Distance - Ultra_Distance);
 			Ultrasonic_NewDis(Ultra_Distance);
@@ -207,7 +208,6 @@ void Ultrasonic_Routine(void){
 				Ultra_IsUseful = 1;//update201612271346直接用Ultra_valid作为是否只使用超声波的健康度
 				Ultra_valid = MOVAVG_SIZE;
 			}
-			Ultra_Distance = Ultrasonic_getAvg(Dist_buffer,MOVAVG_SIZE);
 			//update201612271346
 			// //超声波健康度和是否只使用超声波数据定高标识//update20161227
 			// Ultra_health++;
