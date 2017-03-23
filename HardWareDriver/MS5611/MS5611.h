@@ -48,8 +48,8 @@ extern volatile float Filter_Altitude_DD;
 void MS561101BA_init(void);
 void MS5611BA_Routing(void);
 void MS561101BA_ResetAlt(void);
-float Altitude_Get_D(void);
 void MS561101BA_SetAlt(float Current);
+void MS561101BA_NewAlt(float val);
 
 #endif
 

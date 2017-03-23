@@ -182,11 +182,16 @@ void Ultrasonic_Routine(void){
 			Ultra_Distance = Ultra_Distance + //低通滤波   20hz
 					 (Ultra_dt / (Ultra_dt + Ultra_Lowpass)) * (Distance - Ultra_Distance);
 			Ultrasonic_NewDis(Ultra_Distance);
+			Ultra_IsUseful = 1;//update201612271346直接用Ultra_valid作为是否只使用超声波的健康度
 
 			if(++Ultra_valid>MOVAVG_SIZE){ //连续MOVAVG_SIZE次超声波高度有效，那么应该用它来修正气压高度的漂移
 				MS561101BA_SetAlt(Ultra_Distance);  //超声波 高度有效。标定气压高度。xiang：这里不仅标定了气压高度，还把超声波的数据存到了气压计的buffer里
-				Ultra_IsUseful = 1;//update201612271346直接用Ultra_valid作为是否只使用超声波的健康度
 				Ultra_valid = MOVAVG_SIZE;
+			}
+			else
+			{
+			    MS561101BA_NewAlt(Ultra_Distance);//添加一个新的值到气压计的buff里
+			    ALT_Updated = 1;//气压计高度更新完成
 			}
 			Ultra_Stauts = Ultra_ST_Idle;
 			break;
