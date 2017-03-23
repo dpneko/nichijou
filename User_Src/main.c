@@ -7,7 +7,7 @@
 #define REMOV  0x02	//上传传感器的输出
 #define REHMC  0x03	//上传磁力计的标定值。xiang：这个东西没用到
 
-#define Upload_Speed  10   //数据上传速度  单位 Hz;
+#define Upload_Speed  15   //数据上传速度  单位 Hz;
 #define upload_time (1000000/Upload_Speed)/2	//单位us。xiang：上传时间间隔。这个不是真的上传周期，(1000000/Upload_Speed)才是上传周期。
 												//除以2的原因是一次上传只上传一部分数据，具体除以多少要看全部的数据是分多少次上传的。
 
@@ -143,11 +143,12 @@ int main(void)
 		//上传数据给串口调试助手
 		if((micros()-system_micrsecond)>upload_time)//单位us
 		{
-			char string_to_send[120]={0};
-			sprintf(string_to_send, "Xp:%f\tXv:%f\tXa:%fYp:%f\tYv:%f\tYa:%f\r\n",Position_X,Motion_Velocity_X,Motion_Accx,Position_Y,Motion_Velocity_Y,Motion_Accy);
-			UART1_Put_String((unsigned char *)string_to_send);
+		    char string_to_send[70] = {0};
+		    sprintf(string_to_send, "Alt:%.2f\tUlt:%.2f\tAltD:%.2f\tflg:%.0f\teva:%.2f\r\n",
+			    Filter_Altitude, Ultra_Distance * 100.0f, Filter_Altitude_D,debug_flag,evaluateAltitude);
+		    UART1_Put_String((unsigned char *)string_to_send);
 
-			system_micrsecond=micros();
+		    system_micrsecond = micros();
 		}
 		if((PC_comm=UART1_CommandRoute())!=0xff)
 			GCS_GetCommand(PC_comm);// 处理PC 发送的命令
